@@ -189,7 +189,7 @@ impl fmt::Debug for Generator {
 
 // ---
 
-#[derive(Clone)]
+#[derive(Clone, Hash)]
 pub struct ID {
     val: [u8; ID_LEN],
 }
@@ -473,6 +473,7 @@ fn hostname() -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
     use std::time::Instant;
 
     #[test]
@@ -673,5 +674,50 @@ mod tests {
 
         let invalid: ID = serde_json::from_str("\"invalid\"").unwrap();
         assert_eq!(invalid.val, [0u8; ID_LEN]);
+    }
+
+    #[test]
+    fn test_hash_map_reference_no_encode() {
+        let g = new_generator();
+        let id = g.new_id().unwrap();
+        let mut map: HashMap<&ID, String> = HashMap::new();
+
+        map.insert(&id, String::from("test"));
+        let value = map.get(&id);
+
+        assert!(value.is_some());
+        assert_eq!("test", value.unwrap());
+    }
+
+    #[test]
+    fn test_hash_map_reference_encode() {
+        let g = new_generator();
+        let id = g.new_id().unwrap();
+        let mut map: HashMap<&ID, String> = HashMap::new();
+
+        let encoded = id.encode();
+        map.insert(&id, String::from("test"));
+
+        let id = ID::decode(&encoded);
+        let value = map.get(&id);
+
+        assert!(value.is_some());
+        assert_eq!("test", value.unwrap());
+    }
+
+    #[test]
+    fn test_hash_map_no_reference() {
+        let g = new_generator();
+        let id = g.new_id().unwrap();
+        let mut map: HashMap<ID, String> = HashMap::new();
+
+        let encoded = id.encode();
+        map.insert(id, String::from("test"));
+
+        let id = ID::decode(&encoded);
+        let value = map.get(&id);
+
+        assert!(value.is_some());
+        assert_eq!("test", value.unwrap());
     }
 }
