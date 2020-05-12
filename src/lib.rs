@@ -152,7 +152,7 @@ impl Generator {
     pub fn new_id_with_time(&self, t: SystemTime) -> Result<ID, IDGenerationError> {
         match t.duration_since(UNIX_EPOCH) {
             Ok(n) => Ok(self.generate(n.as_secs())),
-            Err(e) => Err(IDGenerationError(e.description().to_string())),
+            Err(e) => Err(IDGenerationError(e.to_string())),
         }
     }
 
